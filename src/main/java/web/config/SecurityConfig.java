@@ -6,10 +6,17 @@ import org.springframework.security.config.annotation.authentication.builders.Au
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
+import org.springframework.security.core.userdetails.User;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.password.NoOpPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.provisioning.InMemoryUserDetailsManager;
+import org.springframework.security.provisioning.JdbcUserDetailsManager;
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 import web.config.handler.LoginSuccessHandler;
+
+import javax.sql.DataSource;
 
 @Configuration
 @EnableWebSecurity
@@ -22,6 +29,14 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 
     @Override
     protected void configure(HttpSecurity http) throws Exception {
+        http
+                // делаем страницу регистрации недоступной для авторизированных пользователей
+                .authorizeRequests()
+                //страницы аутентификаци доступна всем
+                .antMatchers("/login").anonymous()
+                // защищенные URL
+                .antMatchers("/hello").access("hasAnyRole('ADMIN')").anyRequest().authenticated();
+
         http.formLogin()
                 // указываем страницу с формой логина
                 .loginPage("/login")
@@ -44,18 +59,48 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                 .logoutSuccessUrl("/login?logout")
                 //выклчаем кроссдоменную секьюрность (на этапе обучения неважна)
                 .and().csrf().disable();
-
-        http
-                // делаем страницу регистрации недоступной для авторизированных пользователей
-                .authorizeRequests()
-                //страницы аутентификаци доступна всем
-                .antMatchers("/login").anonymous()
-                // защищенные URL
-                .antMatchers("/hello").access("hasAnyRole('ADMIN')").anyRequest().authenticated();
     }
 
     @Bean
     public PasswordEncoder passwordEncoder() {
         return NoOpPasswordEncoder.getInstance();
+    }
+//                                                          IN MEMORY
+//    @Bean
+//    public UserDetailsService users() {
+//        UserDetails user = User.builder()
+//                .username("user")
+//                .password("{bcrypt}$2a$12$DbqJAswhlC.o/ACE9X87TO7eD9FRaNi.pRUdtda/VdI5lI695uu2i")
+//                .roles("USER")
+//                .build();
+//        UserDetails admin = User.builder()
+//                .username("admin")
+//                .password("{bcrypt}$2a$12$DbqJAswhlC.o/ACE9X87TO7eD9FRaNi.pRUdtda/VdI5lI695uu2i")
+//                .roles("ADMIN", "USER")
+//                .build();
+//        return new InMemoryUserDetailsManager(user, admin);
+//    }
+    @Bean
+    public JdbcUserDetailsManager users(DataSource dataSource) {
+                UserDetails user = User.builder()
+                .username("user")
+                .password("{bcrypt}$2a$12$DbqJAswhlC.o/ACE9X87TO7eD9FRaNi.pRUdtda/VdI5lI695uu2i")
+                .roles("USER")
+                .build();
+        UserDetails admin = User.builder()
+                .username("admin")
+                .password("{bcrypt}$2a$12$DbqJAswhlC.o/ACE9X87TO7eD9FRaNi.pRUdtda/VdI5lI695uu2i")
+                .roles("ADMIN", "USER")
+                .build();
+        JdbcUserDetailsManager jdbcUserDetailsManager = new JdbcUserDetailsManager(dataSource);
+        if (jdbcUserDetailsManager.userExists(user.getUsername())){
+            jdbcUserDetailsManager.deleteUser(user.getUsername());
+        }
+        if (jdbcUserDetailsManager.userExists(admin.getUsername())){
+            jdbcUserDetailsManager.deleteUser(admin.getUsername());
+        }
+        jdbcUserDetailsManager.createUser(user);
+        jdbcUserDetailsManager.createUser(admin);
+        return jdbcUserDetailsManager;
     }
 }
