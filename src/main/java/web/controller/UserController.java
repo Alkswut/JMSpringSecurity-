@@ -13,33 +13,33 @@ import java.util.List;
 @RequestMapping("/")
 public class UserController {
 
-//	@RequestMapping(value = "hello", method = RequestMethod.GET)
-//	public String printWelcome(ModelMap model) {
-//		List<String> messages = new ArrayList<>();
-//		messages.add("Hello!");
-//		messages.add("I'm Spring MVC-SECURITY application");
-//		messages.add("5.2.0 version by sep'19 ");
-//		model.addAttribute("messages", messages);
-//		return "hello";
-//	}
+    @RequestMapping(value = "/", method = RequestMethod.GET)
+    public String printWelcome(ModelMap model) {
+        List<String> messages = new ArrayList<>();
+        messages.add("Hello!");
+        messages.add("I'm Spring MVC-SECURITY application");
+        messages.add("5.2.0 version by sep'19 ");
+        model.addAttribute("messages", messages);
+        return "hello";
+    }
 
     @RequestMapping(value = "login", method = RequestMethod.GET)
     public String loginPage() {
-        return "login";
+        return "/WEB-INF/examples/login.html";
     }
 
-	@GetMapping(value = "/")
-	public String getHomePage() {
-		return "index";
-	}
+    @GetMapping(value = "/")
+    public String getHomePage() {
+        return "/WEB-INF/examples/index.html";
+    }
 
-	@GetMapping(value = "/login")
-	public String getLoginPage() {
-		return "login";
-	}
+    @GetMapping(value = "/login")
+    public String getLoginPage() {
+        return "/WEB-INF/examples/login.html";
+    }
 
-	@GetMapping(value = "/user")
-	public String getUserPage() {
-		return "user";
-	}
+    @GetMapping(value = "/user")
+    public String getUserPage() {
+        return "user";
+    }
 }
