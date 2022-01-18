@@ -1,41 +1,53 @@
 package web.config;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
-import org.springframework.security.core.userdetails.User;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.password.NoOpPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.security.provisioning.InMemoryUserDetailsManager;
-import org.springframework.security.provisioning.JdbcUserDetailsManager;
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 import web.config.handler.LoginSuccessHandler;
-
-import javax.sql.DataSource;
 
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig extends WebSecurityConfigurerAdapter {
+    private final UserDetailsService userDetailsService; // сервис, с помощью которого тащим пользователя
+    private final LoginSuccessHandler loginSuccessHandler;// класс, в котором описана логика перенаправления пользователей по ролям
+
+    public SecurityConfig(@Qualifier("userDetailsServiceImpl") UserDetailsService userDetailsService, LoginSuccessHandler loginSuccessHandler) {
+        this.userDetailsService = userDetailsService;
+        this.loginSuccessHandler = loginSuccessHandler;
+    }
+
+    @Autowired
+    public void configureGlobalSecurity(AuthenticationManagerBuilder auth) throws Exception {
+        auth.userDetailsService(userDetailsService).passwordEncoder(passwordEncoder()); // конфигурация для прохождения аутентификации
+    }
 
     @Override
     public void configure(AuthenticationManagerBuilder auth) throws Exception {
         auth.inMemoryAuthentication().withUser("ADMIN").password("ADMIN").roles("ADMIN");
+        auth.userDetailsService(userDetailsServiceBean()).getUserDetailsService();
     }
 
     @Override
     protected void configure(HttpSecurity http) throws Exception {
+
+
         http
                 // делаем страницу регистрации недоступной для авторизированных пользователей
                 .authorizeRequests()
                 //страницы аутентификаци доступна всем
                 .antMatchers("/login").anonymous()
                 // защищенные URL
-                .antMatchers("/hello").access("hasAnyRole('ADMIN')").anyRequest().authenticated();
+                .antMatchers("/admin/**").access("hasAnyRole('ADMIN')").anyRequest().authenticated();
+                // hasAuthority("ADMIN")
 
         http.formLogin()
                 // указываем страницу с формой логина
@@ -80,27 +92,27 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 //                .build();
 //        return new InMemoryUserDetailsManager(user, admin);
 //    }
-    @Bean
-    public JdbcUserDetailsManager users(DataSource dataSource) {
-                UserDetails user = User.builder()
-                .username("user")
-                .password("{bcrypt}$2a$12$DbqJAswhlC.o/ACE9X87TO7eD9FRaNi.pRUdtda/VdI5lI695uu2i")
-                .roles("USER")
-                .build();
-        UserDetails admin = User.builder()
-                .username("admin")
-                .password("{bcrypt}$2a$12$DbqJAswhlC.o/ACE9X87TO7eD9FRaNi.pRUdtda/VdI5lI695uu2i")
-                .roles("ADMIN", "USER")
-                .build();
-        JdbcUserDetailsManager jdbcUserDetailsManager = new JdbcUserDetailsManager(dataSource);
-        if (jdbcUserDetailsManager.userExists(user.getUsername())){
-            jdbcUserDetailsManager.deleteUser(user.getUsername());
-        }
-        if (jdbcUserDetailsManager.userExists(admin.getUsername())){
-            jdbcUserDetailsManager.deleteUser(admin.getUsername());
-        }
-        jdbcUserDetailsManager.createUser(user);
-        jdbcUserDetailsManager.createUser(admin);
-        return jdbcUserDetailsManager;
-    }
+//    @Bean
+//    public JdbcUserDetailsManager users(DataSource dataSource) {
+//                UserDetails user = User.builder()
+//                .username("user")
+//                .password("{bcrypt}$2a$12$DbqJAswhlC.o/ACE9X87TO7eD9FRaNi.pRUdtda/VdI5lI695uu2i")
+//                .roles("USER")
+//                .build();
+//        UserDetails admin = User.builder()
+//                .username("admin")
+//                .password("{bcrypt}$2a$12$DbqJAswhlC.o/ACE9X87TO7eD9FRaNi.pRUdtda/VdI5lI695uu2i")
+//                .roles("ADMIN", "USER")
+//                .build();
+//        JdbcUserDetailsManager jdbcUserDetailsManager = new JdbcUserDetailsManager(dataSource);
+//        if (jdbcUserDetailsManager.userExists(user.getUsername())){
+//            jdbcUserDetailsManager.deleteUser(user.getUsername());
+//        }
+//        if (jdbcUserDetailsManager.userExists(admin.getUsername())){
+//            jdbcUserDetailsManager.deleteUser(admin.getUsername());
+//        }
+//        jdbcUserDetailsManager.createUser(user);
+//        jdbcUserDetailsManager.createUser(admin);
+//        return jdbcUserDetailsManager;
+//    }
 }
