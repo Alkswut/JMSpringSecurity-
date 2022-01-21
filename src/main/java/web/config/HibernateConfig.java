@@ -21,7 +21,6 @@ import java.util.Properties;
 @EnableTransactionManagement
 @PropertySource(value = "classpath:db.properties")
 public class HibernateConfig {
-
     @Autowired
     private Environment env;
 
@@ -47,7 +46,7 @@ public class HibernateConfig {
         HibernateJpaVendorAdapter vendorAdapter = new HibernateJpaVendorAdapter();
         LocalContainerEntityManagerFactoryBean factory = new LocalContainerEntityManagerFactoryBean();
         factory.setDataSource(dataSource());
-        factory.setPackagesToScan("org.example.model");
+        factory.setPackagesToScan("web.model");
         factory.setJpaVendorAdapter(vendorAdapter);
         factory.setJpaProperties(hibernateProperties());
         return factory;

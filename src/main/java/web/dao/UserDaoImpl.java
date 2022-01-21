@@ -12,36 +12,52 @@ import java.util.List;
 import java.util.Map;
 
 @Repository
-public class UserDaoImpl implements UserDao {
+public class UserDaoImpl implements UserDao{
     @PersistenceContext
     private EntityManager entityManager;
 
-    // name - уникальное значение, выступает в качестве ключа Map
-    private final Map<String, User> userMap = Collections.singletonMap("test",
-            new User(1L, "test", "test", Collections.singleton(new Role(1L, "ROLE_USER"))));
+    private final Map<String, User> userMap =
+            Collections.singletonMap("ADMIN", new User(1L, "ADMIN", "ADMIN",
+                    Collections.singleton(new Role(1L, "ROLE_ADMIN"))));
+
+//    @Override
+//    public User findByUsername(String name) {
+//        if (!userMap.containsKey(name)) {
+//            return null;
+//        }
+//        return userMap.get(name);
+//    }
 
     @Override
-    public User getUserByName(String name) {
-        if (!userMap.containsKey(name)) {
+    public User findByUsername(String name) {
+        Session session = entityManager.unwrap(Session.class);
+        if (session.get(User.class, name) == null) {
             return null;
         }
-        return userMap.get(name);
+        return session.get(User.class, name);
     }
 
     @SuppressWarnings("unchecked")
     @Override
-    public List<User> allUsers() {
+    public List<User> listUsers() {
         return entityManager.createQuery("FROM User", User.class).getResultList();
     }
 
     @Override
-    public void add(User user) {
+    public void addUser(User user) {
         Session session = entityManager.unwrap(Session.class);
         session.persist(user);
     }
 
+
     @Override
-    public void delete(User user) {
+    public User getUserById(Long id) {
+        Session session = entityManager.unwrap(Session.class);
+        return session.get(User.class, id);
+    }
+
+    @Override
+    public void deleteUser(User user) {
         User merge = entityManager.merge(user);
         entityManager.remove(merge);
     }
@@ -50,12 +66,6 @@ public class UserDaoImpl implements UserDao {
     public void editUser(User user) {
         Session session = entityManager.unwrap(Session.class);
         session.update(user);
-    }
-
-    @Override
-    public User getById(int id) {
-        Session session = entityManager.unwrap(Session.class);
-        return session.get(User.class, id);
     }
 }
 
