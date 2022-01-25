@@ -20,40 +20,43 @@ public class UserDetailsServiceImpl implements UserDetailsService, UserService {
         this.userDao = userDao;
     }
 
-
-
+    @Transactional
+    @Override
     public User findByUsername(String username) {
         return userDao.findByUsername(username);
     }
 
+    @Transactional
     @Override
     public List<User> listUsers() {
         return userDao.listUsers();
     }
 
+    @Transactional
     @Override
     public void registerUser(User user) {
-        userDao.addUser(user);
+        User userForAdd = new User(user);
+        userDao.addUser(userForAdd);
     }
 
+    @Transactional
     @Override
     public void deleteUser(User user) {
         userDao.deleteUser(user);
     }
 
+    @Transactional
     @Override
     public void editUser(User user) {
         userDao.editUser(user);
     }
 
+    @Transactional
     @Override
     public User getUserById(long id) {
         return userDao.getUserById(id);
     }
 
-    // «Пользователь» – это просто Object. В большинстве случаев он может быть
-    //  приведен к классу UserDetails.
-    // Для создания UserDetails используется интерфейс UserDetailsService, с единственным методом:
     @Transactional
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {

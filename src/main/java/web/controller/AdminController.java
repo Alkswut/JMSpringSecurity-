@@ -1,71 +1,103 @@
 package web.controller;//package web.controller;
 //
 //import org.springframework.beans.factory.annotation.Autowired;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.ModelAndView;
+import web.model.Role;
 import web.model.User;
+import web.service.RoleService;
 import web.service.UserService;
 
+import java.security.Principal;
 import java.util.List;
+import java.util.Set;
+
 @Controller
 @RequestMapping("/admin")
 public class AdminController {
+    private UserService userService;
+    private RoleService roleService;
 
     @Autowired
-    UserService userService;
+    public void setUserService(UserService userService) {
+        this.userService = userService;
+    }
 
-    @GetMapping(value = "/admin")
-    public ModelAndView allUsers() {
-        ModelAndView modelAndView = new ModelAndView();
+    @Autowired
+    public void setRoleService(RoleService roleService) {
+        this.roleService = roleService;
+    }
+
+    @GetMapping("")
+    public ModelAndView adminPage(ModelAndView modelAndView, Principal principal) {
+        User user = userService.findByUsername(principal.getName());
+        modelAndView.addObject("user", user);
+        modelAndView.setViewName("admin");
+        return modelAndView;
+    }
+
+    @GetMapping(value = "/users")
+    public ModelAndView allUsers(ModelAndView modelAndView) {
         List<User> userList = userService.listUsers();
         modelAndView.setViewName("users");
         modelAndView.addObject("userList", userList);
         return modelAndView;
     }
-//
-//    @GetMapping(value = "/add")
-//    public ModelAndView addPage() {
-//        ModelAndView modelAndView = new ModelAndView();
-//        modelAndView.addObject("user", new User());
-//        modelAndView.setViewName("addUser");
-//        return modelAndView;
-//    }
-//
-//    @PostMapping(value = "/users")
-//    public ModelAndView addUser(@ModelAttribute("user") User user) {
-//        ModelAndView modelAndView = new ModelAndView();
-//        modelAndView.setViewName("redirect:/");
-//        modelAndView.addObject("user");
-//        userService.save(user);
-//        return modelAndView;
-//    }
-//
-//    @GetMapping(value = "/edit/{id}")
-//    public ModelAndView editPage(@PathVariable("id") int id) {
-//        User user = userService.getById(id);
-//        ModelAndView modelAndView = new ModelAndView();
-//        modelAndView.setViewName("editUser");
-//        modelAndView.addObject("user", user);
-//        return modelAndView;
-//    }
-//
-//    @PostMapping(value = "/edit")
-//    public ModelAndView editUser(@ModelAttribute("user") User user) {
-//        ModelAndView modelAndView = new ModelAndView();
-//        modelAndView.setViewName("redirect:/");
-//        userService.editUser(user);
-//        return modelAndView;
-//    }
-//
-//    @GetMapping(value = "/delete/{id}")
-//    public ModelAndView deleteUser(@PathVariable("id") int id) {
-//        ModelAndView modelAndView = new ModelAndView();
-//        modelAndView.setViewName("redirect:/");
-//        User user = userService.getById(id);
-//        userService.delete(user);
-//        return modelAndView;
-//    }
+
+    @GetMapping(value = "/add")
+    public ModelAndView add(ModelAndView modelAndView) {
+        User user = new User();
+        List<Role> roles = roleService.getRolesList();
+        modelAndView.addObject("roles", roles);
+        modelAndView.addObject("user", user);
+        modelAndView.setViewName("addUser");
+        return modelAndView;
+    }
+
+    @PostMapping(value = "/addUser")
+    public ModelAndView addUser(@Validated(User.class)
+                                @ModelAttribute("user") User user,
+                                @RequestParam("authorities") List<String> preRoles,
+                                ModelAndView modelAndView) {
+        modelAndView.setViewName("redirect:/admin/users");
+        Set<Role> roles = roleService.getSetRoles(preRoles);
+        user.setRoles(roles);
+        userService.registerUser(user);
+        return modelAndView;
+    }
+
+    @GetMapping(value = "/edit/{id}")
+    public ModelAndView edit(@PathVariable("id") int id, ModelAndView modelAndView) {
+        User user = userService.getUserById(id);
+        List<Role> roles = roleService.getRolesList();
+        modelAndView.addObject("roles", roles);
+        modelAndView.addObject("user", user);
+        modelAndView.setViewName("editUser");
+        return modelAndView;
+    }
+
+    @PostMapping(value = "/editUser")
+    public ModelAndView editUser(@Validated(User.class)
+                                 @ModelAttribute("user") User user,
+                                 @RequestParam("authorities") List<String> preRoles,
+                                 @RequestBody String body, // for test
+                                 ModelAndView modelAndView) {
+        modelAndView.setViewName("redirect:/admin/users");
+        Set<Role> roles = roleService.getSetRoles(preRoles);
+        user.setRoles(roles);
+        userService.editUser(user);
+        return modelAndView;
+    }
+
+    @GetMapping(value = "/delete/{id}")
+    public ModelAndView deleteUser(@PathVariable("id") int id, ModelAndView modelAndView) {
+        modelAndView.setViewName("redirect:/admin/users");
+        User user = userService.getUserById(id);
+        userService.deleteUser(user);
+        return modelAndView;
+    }
 }

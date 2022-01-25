@@ -9,13 +9,14 @@ import org.springframework.security.config.annotation.authentication.builders.Au
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
+import org.springframework.security.core.userdetails.User;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.NoOpPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 import web.config.handler.LoginSuccessHandler;
-import web.service.UserDetailsServiceImpl;
 
 @Configuration
 @EnableWebSecurity
@@ -35,13 +36,11 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
     @Autowired
     public void configureGlobalSecurity(AuthenticationManagerBuilder auth) throws Exception {
         auth.userDetailsService(userDetailsService).passwordEncoder(passwordEncoder());
-
     }
-
     //Конфигурация пользователя, брать из памяти
 //    @Override
 //    public void configure(AuthenticationManagerBuilder auth) throws Exception {
-//        auth.inMemoryAuthentication().withUser("ADMIN").password("ADMIN").roles("ADMIN");
+//        auth.inMemoryAuthentication().withUser("SADMIN").password("ADMIN").roles("ADMIN");
 //        auth.userDetailsService(userDetailsServiceBean()).getUserDetailsService();
 //    }
 
@@ -53,6 +52,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
         http.authorizeRequests()
                 .antMatchers("/login").anonymous()
                 .antMatchers("/admin/**").hasRole("ADMIN")
+                //.antMatchers("/admin/**").access("hasAnyRole('ADMIN')")
                 .antMatchers("/user/**").hasAnyRole("USER", "ADMIN")
                 .antMatchers("/**").permitAll()
                 .and()
@@ -78,7 +78,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                 // указываем URL логаута
                 .logoutRequestMatcher(new AntPathRequestMatcher("/logout"))
                 // указываем URL при удачном логауте
-                .logoutSuccessUrl("/login?logout")
+                .logoutSuccessUrl("/login")
                 //выклчаем кроссдоменную секьюрность (на этапе обучения неважна)
                 .and().csrf().disable();
     }
@@ -96,6 +96,16 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
         authenticationProvider.setUserDetailsService(userDetailsService);
         return authenticationProvider;
     }
+
+    @Bean
+    public UserDetailsService users() {
+        UserDetails admin = User.builder()
+                .username("superAdmin")
+                .password("{bcrypt}$2a$12$1iE336uN6NLCGvrsb8RahO4Ok9glWvgrZ638nMWUGG5Jwz6Y8vUk.")
+                .roles("ADMIN", "USER")
+                .build();
+        return new InMemoryUserDetailsManager(admin);
+    }
 }
 //                                                          IN MEMORY
 //    @Bean
@@ -112,7 +122,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 //                .build();
 //        return new InMemoryUserDetailsManager(user, admin);
 //    }
-//                                                          IN JDBC standard
+//                                                          IN JDBC
 //    @Bean
 //    public JdbcUserDetailsManager users(DataSource dataSource) {
 //                UserDetails user = User.builder()

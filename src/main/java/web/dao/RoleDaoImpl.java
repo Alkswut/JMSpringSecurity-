@@ -1,21 +1,23 @@
 package web.dao;
 
 import org.hibernate.Session;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Repository;
 import web.model.Role;
 
 import javax.persistence.EntityManager;
+import javax.persistence.PersistenceContext;
 import java.util.List;
 
+@Repository
 public class RoleDaoImpl implements RoleDao {
-    @Autowired
+    @PersistenceContext
     EntityManager entityManager;
 
     @SuppressWarnings("unchecked")
     @Override
     public List<Role> getRolesList() {
         Session session = entityManager.unwrap(Session.class);
-        return session.createQuery("FROM Role").getResultList();
+        return session.createQuery("FROM Role", Role.class).getResultList();
     }
 
     @Override
