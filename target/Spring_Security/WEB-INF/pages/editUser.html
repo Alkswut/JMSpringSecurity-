@@ -23,8 +23,7 @@
                 <th>Roles</th>
             </tr>
             <tr th:object="${user}">
-                <input type="hidden" th:field="*{id}"  />
-<!--                th:value=""-->
+                <input type="hidden" th:field="*{id}"/>
                 <td>
                     <label for="login"></label>
                     <center><input type="text" id="login" th:field="*{username}" placeholder="Login.."></center>
@@ -65,60 +64,3 @@
 </div>
 </body>
 </html>
-
-
-
-
-<!--<!DOCTYPE html>-->
-<!--<html xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org">-->
-<!--<html lang="en">-->
-
-<!--<head>-->
-<!--    <if test="${empty user.getFirstName()}">-->
-<!--        <title>Add</title>-->
-<!--    </if>-->
-<!--    <if test="${!empty user.getFirstName()}">-->
-<!--        <title>Edit</title>-->
-<!--    </if>-->
-<!--</head>-->
-<!--<body>-->
-
-<!--<if test="${!empty user.firstName}">-->
-<!--    <url value="/add" var="var"></url>-->
-<!--    <th>actionE</th>-->
-<!--</if>-->
-
-<!--&lt;!&ndash;<c:if test="${!empty user.getFirstName()}">&ndash;&gt;-->
-<!--&lt;!&ndash;    <c:url value="/edit" var="var"/>&ndash;&gt;-->
-<!--&lt;!&ndash;</c:if>&ndash;&gt;-->
-
-<!--<form action="${var}" th:object="${user}" method="POST">>-->
-
-<!--    &lt;!&ndash;    <if test="${!empty user.getFirstName()}">&ndash;&gt;-->
-<!--    &lt;!&ndash;        <input type="hidden" name="id" value="${user.getId()}">&ndash;&gt;-->
-<!--    &lt;!&ndash;    </if>&ndash;&gt;-->
-
-<!--    <input type="hidden" name="id" value="${user.getId}">-->
-
-<!--    <label for="FirstName">FirstName</label>-->
-<!--    <input type="text" th:field = "*{firstName}" id="FirstName"/>-->
-
-<!--    <input type="text" th:field = "*{lastName}"/>-->
-
-<!--    <input type="number" th:field = "*{age}"/>-->
-
-<!--    <input type="email" th:field = "*{email}"/>-->
-
-<!--    <input type="submit" value="Create" />-->
-
-<!--    <if test="${user.getId}">-->
-<!--        <input type="submit" value="Add new user">-->
-<!--    </if>-->
-
-<!--    &lt;!&ndash;    <c:if test="${!user.getFirstName()}">&ndash;&gt;-->
-<!--    &lt;!&ndash;        <input type="submit" value="Edit film">&ndash;&gt;-->
-<!--    &lt;!&ndash;    </c:if>&ndash;&gt;-->
-
-<!--</form>-->
-<!--</body>-->
-<!--</html>-->
